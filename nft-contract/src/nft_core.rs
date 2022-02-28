@@ -7,12 +7,7 @@ const NO_DEPOSIT: Balance = 0;
 
 pub trait NonFungibleTokenCore {
     //transfers an NFT to a receiver ID
-    fn nft_transfer(
-        &mut self,
-        receiver_id: AccountId,
-        token_id: TokenId,
-        memo: Option<String>,
-    );
+    fn nft_transfer(&mut self, receiver_id: AccountId, token_id: TokenId, memo: Option<String>);
 
     //transfers an NFT to a receiver and calls a function on the receiver ID's contract
     /// Returns `true` if the token was transferred from the sender's account.
@@ -25,7 +20,7 @@ pub trait NonFungibleTokenCore {
     );
 
     //get information about the NFT token passed in
-    fn nft_token(&self, token_id: TokenId);
+    fn nft_token(&self, token_id: TokenId) -> Option<JsonToken>;
 }
 
 #[ext_contract(ext_non_fungible_token_receiver)]
@@ -60,7 +55,7 @@ trait NonFungibleTokenResolver {
     resolves the promise of the cross contract call to the receiver contract
     this is stored on THIS contract and is meant to analyze what happened in the cross contract call when nft_on_transfer was called
     as part of the nft_transfer_call method
-*/ 
+*/
 trait NonFungibleTokenResolver {
     fn nft_resolve_transfer(
         &mut self,
@@ -72,15 +67,9 @@ trait NonFungibleTokenResolver {
 
 #[near_bindgen]
 impl NonFungibleTokenCore for Contract {
-
-    //implementation of the nft_transfer method. This transfers the NFT from the current owner to the receiver. 
+    //implementation of the nft_transfer method. This transfers the NFT from the current owner to the receiver.
     #[payable]
-    fn nft_transfer(
-        &mut self,
-        receiver_id: AccountId,
-        token_id: TokenId,
-        memo: Option<String>,
-    ) {
+    fn nft_transfer(&mut self, receiver_id: AccountId, token_id: TokenId, memo: Option<String>) {
         /*
             FILL THIS IN
         */
@@ -101,10 +90,18 @@ impl NonFungibleTokenCore for Contract {
     }
 
     //get the information for a specific token ID
-    fn nft_token(&self, token_id: TokenId) {
-        /*
-            FILL THIS IN
-        */
+    fn nft_token(&self, token_id: TokenId) -> Option<JsonToken> {
+        if let Some(token) = self.tokens_by_id.get(&token_id) {
+            let metadata = self.token_metadata_by_id.get(&token_id).unwrap();
+
+            Some(JsonToken {
+                token_id,
+                owner_id: token.owner_id,
+                metadata,
+            })
+        } else {
+            None
+        }
     }
 }
 
